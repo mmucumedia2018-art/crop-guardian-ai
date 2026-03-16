@@ -2,14 +2,15 @@ import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Camera, Upload, X, Loader2 } from "lucide-react";
-import { MOCK_DISEASES } from "@/lib/mockData";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 const ScanPage = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isAnalysing, setIsAnalysing] = useState(false);
-  const [progress, setProgress] = useState(0);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -19,30 +20,75 @@ const ScanPage = () => {
     reader.readAsDataURL(file);
   };
 
-  const handleAnalyse = () => {
+  const handleAnalyse = async () => {
+    if (!imagePreview) return;
     setIsAnalysing(true);
-    setProgress(0);
 
-    const interval = setInterval(() => {
-      setProgress((prev) => {
-        if (prev >= 100) {
-          clearInterval(interval);
-          // Navigate to results with mock disease
-          const randomDisease = MOCK_DISEASES[Math.floor(Math.random() * MOCK_DISEASES.length)];
-          setTimeout(() => {
-            navigate("/results", { state: { disease: randomDisease, imageUrl: imagePreview } });
-          }, 200);
-          return 100;
-        }
-        return prev + Math.random() * 15 + 5;
+    try {
+      const { data, error } = await supabase.functions.invoke("detect-disease", {
+        body: { imageBase64: imagePreview },
       });
-    }, 200);
+
+      if (error) {
+        throw new Error(error.message || "Analysis failed");
+      }
+
+      if (data?.error) {
+        toast({
+          title: "Analysis Error",
+          description: data.error,
+          variant: "destructive",
+        });
+        setIsAnalysing(false);
+        return;
+      }
+
+      const diagnosis = data.diagnosis;
+
+      // Save to database
+      await supabase.from("scan_history").insert({
+        crop: diagnosis.crop,
+        is_healthy: diagnosis.is_healthy,
+        disease_name: diagnosis.is_healthy ? null : diagnosis.disease_name,
+        confidence: diagnosis.confidence,
+        severity: diagnosis.severity,
+        description: diagnosis.description,
+        treatment: diagnosis.treatment,
+        prevention: diagnosis.prevention,
+      });
+
+      // Navigate to results
+      navigate("/results", {
+        state: {
+          disease: {
+            id: "live",
+            name: diagnosis.disease_name,
+            crop: diagnosis.crop,
+            confidence: diagnosis.confidence,
+            severity: diagnosis.severity,
+            description: diagnosis.description,
+            treatment: diagnosis.treatment,
+            prevention: diagnosis.prevention,
+          },
+          imageUrl: imagePreview,
+          isHealthy: diagnosis.is_healthy,
+        },
+      });
+    } catch (err) {
+      console.error("Scan error:", err);
+      toast({
+        title: "Something went wrong",
+        description: err instanceof Error ? err.message : "Please try again",
+        variant: "destructive",
+      });
+    } finally {
+      setIsAnalysing(false);
+    }
   };
 
   const clearImage = () => {
     setImagePreview(null);
     setIsAnalysing(false);
-    setProgress(0);
   };
 
   return (
@@ -70,7 +116,6 @@ const ScanPage = () => {
             exit={{ opacity: 0 }}
             className="space-y-3"
           >
-            {/* Camera capture */}
             <button
               onClick={() => {
                 if (fileInputRef.current) {
@@ -89,7 +134,6 @@ const ScanPage = () => {
               </div>
             </button>
 
-            {/* Upload from gallery */}
             <button
               onClick={() => {
                 if (fileInputRef.current) {
@@ -108,7 +152,6 @@ const ScanPage = () => {
               </div>
             </button>
 
-            {/* Tips */}
             <div className="mt-6">
               <h3 className="font-bold text-sm mb-3">Tips for Best Results</h3>
               <ul className="space-y-2 text-sm text-muted-foreground">
@@ -138,7 +181,6 @@ const ScanPage = () => {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           >
-            {/* Image preview */}
             <div className="relative rounded-xl overflow-hidden mb-4 border">
               <img
                 src={imagePreview}
@@ -159,19 +201,18 @@ const ScanPage = () => {
               <div className="space-y-3">
                 <div className="flex items-center gap-3">
                   <Loader2 className="w-5 h-5 text-primary animate-spin" />
-                  <p className="text-sm font-medium">Analysing leaf…</p>
+                  <p className="text-sm font-medium">Analysing leaf with AI…</p>
                 </div>
-                {/* Simple progress bar */}
                 <div className="w-full h-2 rounded-full bg-card overflow-hidden">
                   <motion.div
                     className="h-full bg-primary rounded-full"
                     initial={{ width: "0%" }}
-                    animate={{ width: `${Math.min(progress, 100)}%` }}
-                    transition={{ duration: 0.2 }}
+                    animate={{ width: "90%" }}
+                    transition={{ duration: 8, ease: "easeOut" }}
                   />
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  AI model is processing your image…
+                  This may take a few seconds…
                 </p>
               </div>
             ) : (
