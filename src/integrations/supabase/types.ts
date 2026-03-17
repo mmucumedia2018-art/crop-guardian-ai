@@ -23,9 +23,12 @@ export type Database = {
           disease_name: string | null
           id: string
           is_healthy: boolean
+          latitude: number | null
+          longitude: number | null
           prevention: string[] | null
           severity: string | null
           treatment: string[] | null
+          treatment_costs: Json | null
         }
         Insert: {
           confidence?: string | null
@@ -35,9 +38,12 @@ export type Database = {
           disease_name?: string | null
           id?: string
           is_healthy?: boolean
+          latitude?: number | null
+          longitude?: number | null
           prevention?: string[] | null
           severity?: string | null
           treatment?: string[] | null
+          treatment_costs?: Json | null
         }
         Update: {
           confidence?: string | null
@@ -47,9 +53,12 @@ export type Database = {
           disease_name?: string | null
           id?: string
           is_healthy?: boolean
+          latitude?: number | null
+          longitude?: number | null
           prevention?: string[] | null
           severity?: string | null
           treatment?: string[] | null
+          treatment_costs?: Json | null
         }
         Relationships: []
       }
