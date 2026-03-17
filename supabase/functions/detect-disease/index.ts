@@ -29,6 +29,8 @@ serve(async (req) => {
 
 You MUST respond by calling the diagnose_crop tool with your findings. Be accurate and practical in your recommendations.
 
+IMPORTANT: For treatment, also estimate the approximate cost of each treatment step in USD. Use realistic prices for a smallholder farmer buying from a local agro-dealer. Include the product name/type and approximate cost.
+
 If the image is not a plant/leaf, set is_healthy to true with crop "Unknown" and explain in the description that the image does not appear to be a crop leaf.`;
 
     const response = await fetch(
@@ -48,7 +50,7 @@ If the image is not a plant/leaf, set is_healthy to true with crop "Unknown" and
               content: [
                 {
                   type: "text",
-                  text: "Please analyse this crop leaf image for diseases. Identify the crop type, any disease present, its severity, and provide practical treatment and prevention advice suitable for a smallholder farmer.",
+                  text: "Please analyse this crop leaf image for diseases. Identify the crop type, any disease present, its severity, and provide practical treatment and prevention advice suitable for a smallholder farmer. Include estimated treatment costs.",
                 },
                 {
                   type: "image_url",
@@ -62,15 +64,13 @@ If the image is not a plant/leaf, set is_healthy to true with crop "Unknown" and
               type: "function",
               function: {
                 name: "diagnose_crop",
-                description:
-                  "Return the crop disease diagnosis results.",
+                description: "Return the crop disease diagnosis results with treatment costs.",
                 parameters: {
                   type: "object",
                   properties: {
                     crop: {
                       type: "string",
-                      description:
-                        "The identified crop type (e.g. Tomato, Maize, Rice, Potato)",
+                      description: "The identified crop type (e.g. Tomato, Maize, Rice, Potato)",
                     },
                     is_healthy: {
                       type: "boolean",
@@ -78,8 +78,7 @@ If the image is not a plant/leaf, set is_healthy to true with crop "Unknown" and
                     },
                     disease_name: {
                       type: "string",
-                      description:
-                        "Name of the detected disease, or 'None' if healthy",
+                      description: "Name of the detected disease, or 'None' if healthy",
                     },
                     confidence: {
                       type: "string",
@@ -93,20 +92,31 @@ If the image is not a plant/leaf, set is_healthy to true with crop "Unknown" and
                     },
                     description: {
                       type: "string",
-                      description:
-                        "A clear, farmer-friendly description of the disease and what causes it (2-3 sentences)",
+                      description: "A clear, farmer-friendly description of the disease and what causes it (2-3 sentences)",
                     },
                     treatment: {
                       type: "array",
                       items: { type: "string" },
-                      description:
-                        "3-5 practical treatment steps for a smallholder farmer",
+                      description: "3-5 practical treatment steps for a smallholder farmer",
+                    },
+                    treatment_costs: {
+                      type: "array",
+                      items: {
+                        type: "object",
+                        properties: {
+                          item: { type: "string", description: "Product or action name" },
+                          cost_usd: { type: "number", description: "Approximate cost in USD" },
+                          notes: { type: "string", description: "Where to buy or alternatives" },
+                        },
+                        required: ["item", "cost_usd", "notes"],
+                        additionalProperties: false,
+                      },
+                      description: "Estimated costs for each treatment item",
                     },
                     prevention: {
                       type: "array",
                       items: { type: "string" },
-                      description:
-                        "2-4 prevention tips for future growing seasons",
+                      description: "2-4 prevention tips for future growing seasons",
                     },
                   },
                   required: [
@@ -117,6 +127,7 @@ If the image is not a plant/leaf, set is_healthy to true with crop "Unknown" and
                     "severity",
                     "description",
                     "treatment",
+                    "treatment_costs",
                     "prevention",
                   ],
                   additionalProperties: false,

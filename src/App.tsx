@@ -8,6 +8,7 @@ import HomePage from "./pages/HomePage";
 import ScanPage from "./pages/ScanPage";
 import ResultsPage from "./pages/ResultsPage";
 import HistoryPage from "./pages/HistoryPage";
+import DiseaseMapPage from "./pages/DiseaseMapPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -24,6 +25,7 @@ const App = () => (
             <Route path="/scan" element={<ScanPage />} />
             <Route path="/results" element={<ResultsPage />} />
             <Route path="/history" element={<HistoryPage />} />
+            <Route path="/map" element={<DiseaseMapPage />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>
