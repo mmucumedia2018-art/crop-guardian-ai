@@ -1,9 +1,64 @@
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Camera, Shield, Leaf, TrendingUp } from "lucide-react";
+import { Camera, Shield, Leaf, TrendingUp, CloudRain, MapPin, AlertTriangle, Loader2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+
+interface WeatherAlert {
+  crop: string;
+  disease: string;
+  risk_level: "High" | "Moderate" | "Low";
+  description: string;
+}
 
 const HomePage = () => {
   const navigate = useNavigate();
+  const [weatherAlerts, setWeatherAlerts] = useState<WeatherAlert[]>([]);
+  const [loadingAlerts, setLoadingAlerts] = useState(true);
+  const [recentOutbreaks, setRecentOutbreaks] = useState(0);
+
+  useEffect(() => {
+    // Fetch weather-based risk alerts
+    const fetchAlerts = async () => {
+      try {
+        // Get user location
+        const pos = await new Promise<GeolocationPosition>((resolve, reject) =>
+          navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 5000 })
+        );
+
+        const { data, error } = await supabase.functions.invoke("weather-alerts", {
+          body: { latitude: pos.coords.latitude, longitude: pos.coords.longitude },
+        });
+
+        if (!error && data?.alerts) {
+          setWeatherAlerts(data.alerts);
+        }
+      } catch {
+        // Silently fail — alerts are optional
+      } finally {
+        setLoadingAlerts(false);
+      }
+    };
+
+    // Count recent disease outbreaks
+    const fetchOutbreaks = async () => {
+      const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+      const { count } = await supabase
+        .from("scan_history")
+        .select("*", { count: "exact", head: true })
+        .eq("is_healthy", false)
+        .gte("created_at", weekAgo);
+      setRecentOutbreaks(count || 0);
+    };
+
+    fetchAlerts();
+    fetchOutbreaks();
+  }, []);
+
+  const riskColor = (level: string) =>
+    level === "High" ? "text-destructive bg-destructive/10" :
+    level === "Moderate" ? "text-warning bg-warning/10" :
+    "text-primary bg-primary/10";
 
   return (
     <div className="px-4 pt-8">
@@ -13,10 +68,41 @@ const HomePage = () => {
           <Shield className="w-5 h-5 text-primary-foreground" />
         </div>
         <div>
-          <h1 className="text-xl font-bold tracking-tight">AgriShield</h1>
-          <p className="text-xs text-muted-foreground">AI Disease Detector</p>
+          <h1 className="text-xl font-bold tracking-tight">CropGuard AI</h1>
+          <p className="text-xs text-muted-foreground">Intelligent Crop Health System</p>
         </div>
       </div>
+
+      {/* Weather Risk Alerts */}
+      {loadingAlerts ? (
+        <div className="diagnostic-card mb-4 flex items-center gap-3">
+          <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+          <p className="text-sm text-muted-foreground">Checking disease risk conditions…</p>
+        </div>
+      ) : weatherAlerts.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-6"
+        >
+          <h3 className="font-bold text-sm mb-2 flex items-center gap-2">
+            <CloudRain className="w-4 h-4 text-warning" /> Disease Risk Alerts
+          </h3>
+          <div className="space-y-2">
+            {weatherAlerts.slice(0, 3).map((alert, i) => (
+              <div key={i} className="diagnostic-card flex items-start gap-3">
+                <div className={`px-2 py-0.5 rounded-full text-xs font-bold flex-shrink-0 ${riskColor(alert.risk_level)}`}>
+                  {alert.risk_level}
+                </div>
+                <div>
+                  <p className="text-sm font-semibold">{alert.disease} risk on {alert.crop}</p>
+                  <p className="text-xs text-muted-foreground">{alert.description}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </motion.div>
+      )}
 
       {/* Hero Card */}
       <motion.div
@@ -33,11 +119,34 @@ const HomePage = () => {
           <div>
             <h2 className="text-lg font-bold text-primary-foreground">Scan Your Crop</h2>
             <p className="text-sm text-primary-foreground/80 mt-0.5">
-              Take a photo of a leaf to detect diseases instantly
+              Detect diseases, get treatment costs & prevention tips
             </p>
           </div>
         </div>
       </motion.div>
+
+      {/* Community Outbreak Banner */}
+      {recentOutbreaks > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="diagnostic-card border-warning/30 bg-warning/5 mb-6 cursor-pointer active:scale-[0.98] transition-transform"
+          onClick={() => navigate("/map")}
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-warning/10 flex items-center justify-center flex-shrink-0">
+              <MapPin className="w-5 h-5 text-warning" />
+            </div>
+            <div>
+              <p className="font-semibold text-sm flex items-center gap-1.5">
+                <AlertTriangle className="w-3.5 h-3.5 text-warning" />
+                {recentOutbreaks} disease{recentOutbreaks > 1 ? "s" : ""} reported nearby this week
+              </p>
+              <p className="text-xs text-muted-foreground">Tap to view community disease map</p>
+            </div>
+          </div>
+        </motion.div>
+      )}
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-3 mb-8">
@@ -65,8 +174,9 @@ const HomePage = () => {
       <div className="space-y-3">
         {[
           { step: 1, title: "Capture", desc: "Take a clear photo of the affected leaf" },
-          { step: 2, title: "Analyse", desc: "AI processes the image in seconds" },
-          { step: 3, title: "Diagnose", desc: "Get disease identification & treatment advice" },
+          { step: 2, title: "Analyse", desc: "AI analyses image + local weather conditions" },
+          { step: 3, title: "Diagnose", desc: "Get diagnosis, treatment costs & prevention tips" },
+          { step: 4, title: "Alert", desc: "Community gets warned of nearby outbreaks" },
         ].map((item) => (
           <motion.div
             key={item.step}

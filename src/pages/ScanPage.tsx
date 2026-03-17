@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Camera, Upload, X, Loader2 } from "lucide-react";
@@ -11,6 +11,15 @@ const ScanPage = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isAnalysing, setIsAnalysing] = useState(false);
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+
+  // Get GPS location on mount
+  useEffect(() => {
+    navigator.geolocation.getCurrentPosition(
+      (pos) => setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+      () => {} // Silently fail
+    );
+  }, []);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -29,23 +38,17 @@ const ScanPage = () => {
         body: { imageBase64: imagePreview },
       });
 
-      if (error) {
-        throw new Error(error.message || "Analysis failed");
-      }
+      if (error) throw new Error(error.message || "Analysis failed");
 
       if (data?.error) {
-        toast({
-          title: "Analysis Error",
-          description: data.error,
-          variant: "destructive",
-        });
+        toast({ title: "Analysis Error", description: data.error, variant: "destructive" });
         setIsAnalysing(false);
         return;
       }
 
       const diagnosis = data.diagnosis;
 
-      // Save to database
+      // Save to database with GPS
       await supabase.from("scan_history").insert({
         crop: diagnosis.crop,
         is_healthy: diagnosis.is_healthy,
@@ -55,9 +58,11 @@ const ScanPage = () => {
         description: diagnosis.description,
         treatment: diagnosis.treatment,
         prevention: diagnosis.prevention,
+        treatment_costs: diagnosis.treatment_costs,
+        latitude: userLocation?.lat ?? null,
+        longitude: userLocation?.lng ?? null,
       });
 
-      // Navigate to results
       navigate("/results", {
         state: {
           disease: {
@@ -68,6 +73,7 @@ const ScanPage = () => {
             severity: diagnosis.severity,
             description: diagnosis.description,
             treatment: diagnosis.treatment,
+            treatment_costs: diagnosis.treatment_costs,
             prevention: diagnosis.prevention,
           },
           imageUrl: imagePreview,
@@ -109,20 +115,9 @@ const ScanPage = () => {
 
       <AnimatePresence mode="wait">
         {!imagePreview ? (
-          <motion.div
-            key="upload"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="space-y-3"
-          >
+          <motion.div key="upload" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-3">
             <button
-              onClick={() => {
-                if (fileInputRef.current) {
-                  fileInputRef.current.setAttribute("capture", "environment");
-                  fileInputRef.current.click();
-                }
-              }}
+              onClick={() => { fileInputRef.current?.setAttribute("capture", "environment"); fileInputRef.current?.click(); }}
               className="w-full diagnostic-card flex items-center gap-4 active:scale-[0.98] transition-transform"
             >
               <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
@@ -135,12 +130,7 @@ const ScanPage = () => {
             </button>
 
             <button
-              onClick={() => {
-                if (fileInputRef.current) {
-                  fileInputRef.current.removeAttribute("capture");
-                  fileInputRef.current.click();
-                }
-              }}
+              onClick={() => { fileInputRef.current?.removeAttribute("capture"); fileInputRef.current?.click(); }}
               className="w-full diagnostic-card flex items-center gap-4 active:scale-[0.98] transition-transform"
             >
               <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
@@ -155,43 +145,26 @@ const ScanPage = () => {
             <div className="mt-6">
               <h3 className="font-bold text-sm mb-3">Tips for Best Results</h3>
               <ul className="space-y-2 text-sm text-muted-foreground">
-                <li className="flex items-start gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 flex-shrink-0" />
-                  Photograph a single leaf against a plain background
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 flex-shrink-0" />
-                  Ensure good lighting — natural daylight works best
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 flex-shrink-0" />
-                  Include both healthy and affected areas of the leaf
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 flex-shrink-0" />
-                  Keep the camera steady to avoid blurry images
-                </li>
+                {[
+                  "Photograph a single leaf against a plain background",
+                  "Ensure good lighting — natural daylight works best",
+                  "Include both healthy and affected areas of the leaf",
+                  "Keep the camera steady to avoid blurry images",
+                ].map((tip, i) => (
+                  <li key={i} className="flex items-start gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 flex-shrink-0" />
+                    {tip}
+                  </li>
+                ))}
               </ul>
             </div>
           </motion.div>
         ) : (
-          <motion.div
-            key="preview"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-          >
+          <motion.div key="preview" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
             <div className="relative rounded-xl overflow-hidden mb-4 border">
-              <img
-                src={imagePreview}
-                alt="Captured crop leaf"
-                className="w-full aspect-[4/3] object-cover"
-              />
+              <img src={imagePreview} alt="Captured crop leaf" className="w-full aspect-[4/3] object-cover" />
               {!isAnalysing && (
-                <button
-                  onClick={clearImage}
-                  className="absolute top-3 right-3 w-8 h-8 rounded-full bg-foreground/60 flex items-center justify-center"
-                >
+                <button onClick={clearImage} className="absolute top-3 right-3 w-8 h-8 rounded-full bg-foreground/60 flex items-center justify-center">
                   <X className="w-4 h-4 text-background" />
                 </button>
               )}
@@ -204,22 +177,12 @@ const ScanPage = () => {
                   <p className="text-sm font-medium">Analysing leaf with AI…</p>
                 </div>
                 <div className="w-full h-2 rounded-full bg-card overflow-hidden">
-                  <motion.div
-                    className="h-full bg-primary rounded-full"
-                    initial={{ width: "0%" }}
-                    animate={{ width: "90%" }}
-                    transition={{ duration: 8, ease: "easeOut" }}
-                  />
+                  <motion.div className="h-full bg-primary rounded-full" initial={{ width: "0%" }} animate={{ width: "90%" }} transition={{ duration: 8, ease: "easeOut" }} />
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  This may take a few seconds…
-                </p>
+                <p className="text-xs text-muted-foreground">This may take a few seconds…</p>
               </div>
             ) : (
-              <button
-                onClick={handleAnalyse}
-                className="w-full py-3.5 rounded-xl bg-primary text-primary-foreground font-semibold text-sm active:scale-[0.98] transition-transform"
-              >
+              <button onClick={handleAnalyse} className="w-full py-3.5 rounded-xl bg-primary text-primary-foreground font-semibold text-sm active:scale-[0.98] transition-transform">
                 Analyse Leaf
               </button>
             )}

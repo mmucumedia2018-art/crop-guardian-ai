@@ -2,3 +2,6 @@ project_id = "aebceqjfzfcdfnkkrbqk"
 
 [functions.detect-disease]
 verify_jwt = false
+
+[functions.weather-alerts]
+verify_jwt = false
