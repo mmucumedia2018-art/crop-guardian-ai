@@ -47,6 +47,7 @@ const ResultsPage = () => {
     disease.confidence === "Moderate" ? "bg-warning/10 text-warning" :
     "bg-muted text-muted-foreground";
 
+  const KSH_RATE = 129;
   const totalCost = disease.treatment_costs?.reduce((sum, c) => sum + c.cost_usd, 0) ?? 0;
 
   return (
@@ -122,14 +123,16 @@ const ResultsPage = () => {
                   <p className="text-sm font-semibold">{cost.item}</p>
                   <p className="text-xs text-muted-foreground">{cost.notes}</p>
                 </div>
-                <span className="text-sm font-bold text-warning whitespace-nowrap">
-                  ${cost.cost_usd.toFixed(2)}
-                </span>
+                <div className="text-right whitespace-nowrap">
+                  <span className="text-sm font-bold text-warning">KSh {(cost.cost_usd * KSH_RATE).toFixed(0)}</span>
+                  <span className="text-xs text-muted-foreground ml-1">(${cost.cost_usd.toFixed(2)})</span>
+                </div>
               </div>
             ))}
             <div className="border-t pt-3 flex items-center justify-between">
               <p className="text-sm font-bold">Total Estimated Cost</p>
-              <p className="text-base font-bold text-warning">${totalCost.toFixed(2)}</p>
+              <p className="text-base font-bold text-warning">KSh {(totalCost * KSH_RATE).toFixed(0)}</p>
+              <p className="text-xs text-muted-foreground">(${totalCost.toFixed(2)})</p>
             </div>
           </div>
         </motion.div>
