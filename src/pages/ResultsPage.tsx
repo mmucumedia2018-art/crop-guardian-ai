@@ -123,9 +123,10 @@ const ResultsPage = () => {
                   <p className="text-sm font-semibold">{cost.item}</p>
                   <p className="text-xs text-muted-foreground">{cost.notes}</p>
                 </div>
-                <span className="text-sm font-bold text-warning whitespace-nowrap">
-                  ${cost.cost_usd.toFixed(2)}
-                </span>
+                <div className="text-right whitespace-nowrap">
+                  <span className="text-sm font-bold text-warning">KSh {(cost.cost_usd * KSH_RATE).toFixed(0)}</span>
+                  <span className="text-xs text-muted-foreground ml-1">(${cost.cost_usd.toFixed(2)})</span>
+                </div>
               </div>
             ))}
             <div className="border-t pt-3 flex items-center justify-between">
