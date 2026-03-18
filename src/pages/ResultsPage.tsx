@@ -47,6 +47,7 @@ const ResultsPage = () => {
     disease.confidence === "Moderate" ? "bg-warning/10 text-warning" :
     "bg-muted text-muted-foreground";
 
+  const KSH_RATE = 129;
   const totalCost = disease.treatment_costs?.reduce((sum, c) => sum + c.cost_usd, 0) ?? 0;
 
   return (
