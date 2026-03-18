@@ -131,7 +131,8 @@ const ResultsPage = () => {
             ))}
             <div className="border-t pt-3 flex items-center justify-between">
               <p className="text-sm font-bold">Total Estimated Cost</p>
-              <p className="text-base font-bold text-warning">${totalCost.toFixed(2)}</p>
+              <p className="text-base font-bold text-warning">KSh {(totalCost * KSH_RATE).toFixed(0)}</p>
+              <p className="text-xs text-muted-foreground">(${totalCost.toFixed(2)})</p>
             </div>
           </div>
         </motion.div>
