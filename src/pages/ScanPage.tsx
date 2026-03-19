@@ -1,9 +1,23 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Camera, Upload, X, Loader2 } from "lucide-react";
+import { Camera, Upload, X, Loader2, ChevronDown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+
+const CROP_OPTIONS = [
+  "Auto-detect",
+  "Maize", "Wheat", "Rice", "Sorghum", "Millet", "Barley",
+  "Beans", "Soybeans", "Groundnuts", "Chickpeas", "Lentils", "Cowpeas",
+  "Potato", "Cassava", "Sweet Potato", "Yam",
+  "Tomato", "Pepper", "Onion", "Cabbage", "Kale", "Spinach", "Carrot", "Cucumber", "Eggplant", "Okra",
+  "Banana", "Mango", "Avocado", "Citrus", "Papaya", "Pineapple", "Grape", "Apple", "Watermelon", "Guava",
+  "Sunflower", "Sesame", "Canola", "Oil Palm", "Coconut",
+  "Coffee", "Tea", "Cocoa",
+  "Cotton", "Sisal",
+  "Sugarcane", "Sugar Beet",
+  "Ginger", "Turmeric", "Garlic", "Chili",
+];
 
 const ScanPage = () => {
   const navigate = useNavigate();
