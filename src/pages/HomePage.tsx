@@ -151,7 +151,7 @@ const HomePage = () => {
       {/* Stats */}
       <div className="grid grid-cols-3 gap-3 mb-8">
         {[
-          { label: "Crops", value: "38+", icon: Leaf },
+          { label: "Crops", value: "50+", icon: Leaf },
           { label: "Diseases", value: "120+", icon: Shield },
           { label: "Accuracy", value: "95%", icon: TrendingUp },
         ].map((stat) => (
@@ -199,16 +199,25 @@ const HomePage = () => {
       {/* Supported Crops */}
       <h3 className="font-bold text-base mt-8 mb-4">Supported Crops</h3>
       <div className="flex gap-2 flex-wrap mb-4">
-        {["Tomato", "Maize", "Rice", "Potato", "Cassava", "Wheat", "Bean", "Pepper"].map(
-          (crop) => (
-            <span
-              key={crop}
-              className="px-3 py-1.5 rounded-full bg-card text-sm font-medium border"
-            >
-              {crop}
-            </span>
-          )
-        )}
+        {[
+          "Maize", "Wheat", "Rice", "Sorghum", "Millet", "Barley",
+          "Beans", "Soybeans", "Groundnuts", "Chickpeas", "Lentils", "Cowpeas",
+          "Potato", "Cassava", "Sweet Potato", "Yam",
+          "Tomato", "Pepper", "Onion", "Cabbage", "Kale", "Spinach", "Carrot", "Cucumber", "Eggplant", "Okra",
+          "Banana", "Mango", "Avocado", "Citrus", "Papaya", "Grape", "Apple", "Watermelon", "Guava",
+          "Sunflower", "Sesame", "Oil Palm", "Coconut",
+          "Coffee", "Tea", "Cocoa",
+          "Cotton", "Sisal",
+          "Sugarcane", "Sugar Beet",
+          "Ginger", "Turmeric", "Garlic", "Chili",
+        ].map((crop) => (
+          <span
+            key={crop}
+            className="px-3 py-1.5 rounded-full bg-card text-sm font-medium border"
+          >
+            {crop}
+          </span>
+        ))}
       </div>
     </div>
   );
