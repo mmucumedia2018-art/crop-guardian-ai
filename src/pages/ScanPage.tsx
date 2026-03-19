@@ -25,6 +25,7 @@ const ScanPage = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isAnalysing, setIsAnalysing] = useState(false);
+  const [selectedCrop, setSelectedCrop] = useState("Auto-detect");
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
 
   // Get GPS location on mount
