@@ -1,9 +1,23 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Camera, Upload, X, Loader2 } from "lucide-react";
+import { Camera, Upload, X, Loader2, ChevronDown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+
+const CROP_OPTIONS = [
+  "Auto-detect",
+  "Maize", "Wheat", "Rice", "Sorghum", "Millet", "Barley",
+  "Beans", "Soybeans", "Groundnuts", "Chickpeas", "Lentils", "Cowpeas",
+  "Potato", "Cassava", "Sweet Potato", "Yam",
+  "Tomato", "Pepper", "Onion", "Cabbage", "Kale", "Spinach", "Carrot", "Cucumber", "Eggplant", "Okra",
+  "Banana", "Mango", "Avocado", "Citrus", "Papaya", "Pineapple", "Grape", "Apple", "Watermelon", "Guava",
+  "Sunflower", "Sesame", "Canola", "Oil Palm", "Coconut",
+  "Coffee", "Tea", "Cocoa",
+  "Cotton", "Sisal",
+  "Sugarcane", "Sugar Beet",
+  "Ginger", "Turmeric", "Garlic", "Chili",
+];
 
 const ScanPage = () => {
   const navigate = useNavigate();
@@ -11,6 +25,7 @@ const ScanPage = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isAnalysing, setIsAnalysing] = useState(false);
+  const [selectedCrop, setSelectedCrop] = useState("Auto-detect");
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
 
   // Get GPS location on mount
@@ -35,7 +50,10 @@ const ScanPage = () => {
 
     try {
       const { data, error } = await supabase.functions.invoke("detect-disease", {
-        body: { imageBase64: imagePreview },
+        body: {
+          imageBase64: imagePreview,
+          selectedCrop: selectedCrop !== "Auto-detect" ? selectedCrop : undefined,
+        },
       });
 
       if (error) throw new Error(error.message || "Analysis failed");
@@ -161,6 +179,25 @@ const ScanPage = () => {
           </motion.div>
         ) : (
           <motion.div key="preview" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+            {/* Crop selector */}
+            <div className="mb-4">
+              <label className="text-sm font-medium mb-1.5 block">Crop Type</label>
+              <div className="relative">
+                <select
+                  value={selectedCrop}
+                  onChange={(e) => setSelectedCrop(e.target.value)}
+                  disabled={isAnalysing}
+                  className="w-full appearance-none rounded-xl border bg-card px-4 py-3 pr-10 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary/30 disabled:opacity-50"
+                >
+                  {CROP_OPTIONS.map((crop) => (
+                    <option key={crop} value={crop}>{crop}</option>
+                  ))}
+                </select>
+                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">Select your crop or leave as auto-detect</p>
+            </div>
+
             <div className="relative rounded-xl overflow-hidden mb-4 border">
               <img src={imagePreview} alt="Captured crop leaf" className="w-full aspect-[4/3] object-cover" />
               {!isAnalysing && (

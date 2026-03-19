@@ -12,7 +12,7 @@ serve(async (req) => {
   }
 
   try {
-    const { imageBase64 } = await req.json();
+    const { imageBase64, selectedCrop } = await req.json();
     if (!imageBase64) {
       return new Response(JSON.stringify({ error: "No image provided" }), {
         status: 400,
@@ -60,7 +60,9 @@ You MUST respond by calling the diagnose_crop tool with your findings.`;
               content: [
                 {
                   type: "text",
-                  text: "Please analyse this crop leaf image for diseases. Identify the crop type, any disease present, its severity, and provide practical treatment and prevention advice suitable for a smallholder farmer. Include estimated treatment costs.",
+                  text: selectedCrop
+                    ? `The farmer indicates this is a ${selectedCrop} plant. Please verify this identification and analyse the leaf for diseases. If the leaf clearly belongs to a different crop, use the correct identification instead. Provide practical treatment and prevention advice suitable for a smallholder farmer. Include estimated treatment costs.`
+                    : "Please analyse this crop leaf image for diseases. Identify the crop type, any disease present, its severity, and provide practical treatment and prevention advice suitable for a smallholder farmer. Include estimated treatment costs.",
                 },
                 {
                   type: "image_url",
