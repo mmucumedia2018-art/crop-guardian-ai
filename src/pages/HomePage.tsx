@@ -151,7 +151,7 @@ const HomePage = () => {
       {/* Stats */}
       <div className="grid grid-cols-3 gap-3 mb-8">
         {[
-          { label: "Crops", value: "38+", icon: Leaf },
+          { label: "Crops", value: "50+", icon: Leaf },
           { label: "Diseases", value: "120+", icon: Shield },
           { label: "Accuracy", value: "95%", icon: TrendingUp },
         ].map((stat) => (
