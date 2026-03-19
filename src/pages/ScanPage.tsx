@@ -50,7 +50,10 @@ const ScanPage = () => {
 
     try {
       const { data, error } = await supabase.functions.invoke("detect-disease", {
-        body: { imageBase64: imagePreview },
+        body: {
+          imageBase64: imagePreview,
+          selectedCrop: selectedCrop !== "Auto-detect" ? selectedCrop : undefined,
+        },
       });
 
       if (error) throw new Error(error.message || "Analysis failed");
