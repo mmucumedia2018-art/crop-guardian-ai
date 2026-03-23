@@ -198,25 +198,29 @@ const HomePage = () => {
 
       {/* Supported Crops */}
       <h3 className="font-bold text-base mt-8 mb-4">Supported Crops</h3>
-      <div className="flex gap-2 flex-wrap mb-4">
+      <div className="space-y-4 mb-4">
         {[
-          "Maize", "Wheat", "Rice", "Sorghum", "Millet", "Barley",
-          "Beans", "Soybeans", "Groundnuts", "Chickpeas", "Lentils", "Cowpeas",
-          "Potato", "Cassava", "Sweet Potato", "Yam",
-          "Tomato", "Pepper", "Onion", "Cabbage", "Kale", "Spinach", "Carrot", "Cucumber", "Eggplant", "Okra",
-          "Banana", "Mango", "Avocado", "Citrus", "Papaya", "Grape", "Apple", "Watermelon", "Guava",
-          "Sunflower", "Sesame", "Oil Palm", "Coconut",
-          "Coffee", "Tea", "Cocoa",
-          "Cotton", "Sisal",
-          "Sugarcane", "Sugar Beet",
-          "Ginger", "Turmeric", "Garlic", "Chili",
-        ].map((crop) => (
-          <span
-            key={crop}
-            className="px-3 py-1.5 rounded-full bg-card text-sm font-medium border"
-          >
-            {crop}
-          </span>
+          { category: "🌾 Cereals", crops: ["Maize", "Wheat", "Rice", "Sorghum", "Millet", "Barley"] },
+          { category: "🫘 Legumes", crops: ["Beans", "Soybeans", "Groundnuts", "Chickpeas", "Lentils", "Cowpeas"] },
+          { category: "🥔 Tubers", crops: ["Potato", "Cassava", "Sweet Potato", "Yam"] },
+          { category: "🥬 Vegetables", crops: ["Tomato", "Pepper", "Onion", "Cabbage", "Kale", "Spinach", "Carrot", "Cucumber", "Eggplant", "Okra"] },
+          { category: "🍌 Fruits", crops: ["Banana", "Mango", "Avocado", "Citrus", "Papaya", "Grape", "Apple", "Watermelon", "Guava"] },
+          { category: "🌻 Oil Crops", crops: ["Sunflower", "Sesame", "Oil Palm", "Coconut"] },
+          { category: "☕ Stimulants", crops: ["Coffee", "Tea", "Cocoa"] },
+          { category: "🧵 Fibre Crops", crops: ["Cotton", "Sisal"] },
+          { category: "🍬 Sugar Crops", crops: ["Sugarcane", "Sugar Beet"] },
+          { category: "🌶️ Spices", crops: ["Ginger", "Turmeric", "Garlic", "Chili"] },
+        ].map((group) => (
+          <div key={group.category}>
+            <p className="text-xs font-semibold text-muted-foreground mb-2">{group.category}</p>
+            <div className="flex gap-2 flex-wrap">
+              {group.crops.map((crop) => (
+                <span key={crop} className="px-3 py-1.5 rounded-full bg-card text-sm font-medium border">
+                  {crop}
+                </span>
+              ))}
+            </div>
+          </div>
         ))}
       </div>
     </div>
