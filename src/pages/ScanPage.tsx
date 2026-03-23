@@ -26,7 +26,15 @@ const ScanPage = () => {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isAnalysing, setIsAnalysing] = useState(false);
   const [selectedCrop, setSelectedCrop] = useState("Auto-detect");
+  const [cropSearchOpen, setCropSearchOpen] = useState(false);
+  const [cropSearch, setCropSearch] = useState("");
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+
+  const filteredCrops = useMemo(() => {
+    if (!cropSearch) return CROP_OPTIONS;
+    const q = cropSearch.toLowerCase();
+    return CROP_OPTIONS.filter((c) => c.toLowerCase().includes(q));
+  }, [cropSearch]);
 
   // Get GPS location on mount
   useEffect(() => {
