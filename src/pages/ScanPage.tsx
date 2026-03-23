@@ -1,7 +1,7 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Camera, Upload, X, Loader2, ChevronDown } from "lucide-react";
+import { Camera, Upload, X, Loader2, ChevronDown, Search, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -26,7 +26,15 @@ const ScanPage = () => {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isAnalysing, setIsAnalysing] = useState(false);
   const [selectedCrop, setSelectedCrop] = useState("Auto-detect");
+  const [cropSearchOpen, setCropSearchOpen] = useState(false);
+  const [cropSearch, setCropSearch] = useState("");
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+
+  const filteredCrops = useMemo(() => {
+    if (!cropSearch) return CROP_OPTIONS;
+    const q = cropSearch.toLowerCase();
+    return CROP_OPTIONS.filter((c) => c.toLowerCase().includes(q));
+  }, [cropSearch]);
 
   // Get GPS location on mount
   useEffect(() => {
@@ -179,22 +187,61 @@ const ScanPage = () => {
           </motion.div>
         ) : (
           <motion.div key="preview" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-            {/* Crop selector */}
+            {/* Crop selector with search */}
             <div className="mb-4">
               <label className="text-sm font-medium mb-1.5 block">Crop Type</label>
-              <div className="relative">
-                <select
-                  value={selectedCrop}
-                  onChange={(e) => setSelectedCrop(e.target.value)}
-                  disabled={isAnalysing}
-                  className="w-full appearance-none rounded-xl border bg-card px-4 py-3 pr-10 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary/30 disabled:opacity-50"
-                >
-                  {CROP_OPTIONS.map((crop) => (
-                    <option key={crop} value={crop}>{crop}</option>
-                  ))}
-                </select>
-                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
-              </div>
+              <button
+                type="button"
+                onClick={() => !isAnalysing && setCropSearchOpen(!cropSearchOpen)}
+                disabled={isAnalysing}
+                className="w-full flex items-center justify-between rounded-xl border bg-card px-4 py-3 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary/30 disabled:opacity-50"
+              >
+                <span>{selectedCrop}</span>
+                <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${cropSearchOpen ? "rotate-180" : ""}`} />
+              </button>
+
+              <AnimatePresence>
+                {cropSearchOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="overflow-hidden"
+                  >
+                    <div className="mt-2 rounded-xl border bg-card shadow-lg">
+                      <div className="flex items-center gap-2 px-3 py-2 border-b">
+                        <Search className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                        <input
+                          type="text"
+                          placeholder="Search crops…"
+                          value={cropSearch}
+                          onChange={(e) => setCropSearch(e.target.value)}
+                          className="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+                          autoFocus
+                        />
+                      </div>
+                      <div className="max-h-48 overflow-y-auto p-1">
+                        {filteredCrops.length === 0 ? (
+                          <p className="text-xs text-muted-foreground text-center py-3">No crops found</p>
+                        ) : (
+                          filteredCrops.map((crop) => (
+                            <button
+                              key={crop}
+                              type="button"
+                              onClick={() => { setSelectedCrop(crop); setCropSearchOpen(false); setCropSearch(""); }}
+                              className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-left hover:bg-accent transition-colors ${selectedCrop === crop ? "font-semibold text-primary" : ""}`}
+                            >
+                              {selectedCrop === crop && <Check className="w-3.5 h-3.5 text-primary flex-shrink-0" />}
+                              <span className={selectedCrop === crop ? "" : "ml-5.5"}>{crop}</span>
+                            </button>
+                          ))
+                        )}
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
               <p className="text-xs text-muted-foreground mt-1">Select your crop or leave as auto-detect</p>
             </div>
 
