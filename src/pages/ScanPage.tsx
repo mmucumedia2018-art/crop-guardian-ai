@@ -232,7 +232,7 @@ const ScanPage = () => {
                               className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-left hover:bg-accent transition-colors ${selectedCrop === crop ? "font-semibold text-primary" : ""}`}
                             >
                               {selectedCrop === crop && <Check className="w-3.5 h-3.5 text-primary flex-shrink-0" />}
-                              <span className={selectedCrop === crop ? "" : "ml-5.5"}>{crop}</span>
+                              <span className={selectedCrop !== crop ? "ml-6" : ""}>{crop}</span>
                             </button>
                           ))
                         )}
