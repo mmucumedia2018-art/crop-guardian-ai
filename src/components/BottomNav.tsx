@@ -1,9 +1,11 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import { Home, Camera, Clock, Map } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const BottomNav = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { t } = useLanguage();
 
   const isActive = (path: string) => location.pathname === path;
 
@@ -15,7 +17,7 @@ const BottomNav = () => {
           className={`flex flex-col items-center gap-0.5 py-2 px-3 transition-colors ${isActive("/") ? "text-primary" : "text-muted-foreground"}`}
         >
           <Home className="w-5 h-5" />
-          <span className="text-[11px] font-display font-medium">Home</span>
+          <span className="text-[11px] font-display font-medium">{t("nav.home")}</span>
         </button>
 
         <button
@@ -23,7 +25,7 @@ const BottomNav = () => {
           className={`flex flex-col items-center gap-0.5 py-2 px-3 transition-colors ${isActive("/map") ? "text-primary" : "text-muted-foreground"}`}
         >
           <Map className="w-5 h-5" />
-          <span className="text-[11px] font-display font-medium">Map</span>
+          <span className="text-[11px] font-display font-medium">{t("nav.map")}</span>
         </button>
 
         {/* Scan - Hero Button */}
@@ -34,7 +36,7 @@ const BottomNav = () => {
           <div className="w-16 h-16 rounded-full bg-primary flex items-center justify-center scan-button-glow active:scale-95 transition-transform">
             <Camera className="w-7 h-7 text-primary-foreground" />
           </div>
-          <span className="text-[11px] font-display font-medium text-primary mt-1">Scan</span>
+          <span className="text-[11px] font-display font-medium text-primary mt-1">{t("nav.scan")}</span>
         </button>
 
         <button
@@ -42,7 +44,7 @@ const BottomNav = () => {
           className={`flex flex-col items-center gap-0.5 py-2 px-3 transition-colors ${isActive("/history") ? "text-primary" : "text-muted-foreground"}`}
         >
           <Clock className="w-5 h-5" />
-          <span className="text-[11px] font-display font-medium">History</span>
+          <span className="text-[11px] font-display font-medium">{t("nav.history")}</span>
         </button>
       </div>
     </nav>
