@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { CheckCircle2, AlertTriangle, ChevronRight, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface ScanRecord {
   id: string;
@@ -19,6 +20,7 @@ interface ScanRecord {
 
 const HistoryPage = () => {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [records, setRecords] = useState<ScanRecord[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -37,10 +39,8 @@ const HistoryPage = () => {
 
   return (
     <div className="px-4 pt-6">
-      <h1 className="text-xl font-bold mb-1">Scan History</h1>
-      <p className="text-sm text-muted-foreground mb-6">
-        Your recent crop scans and diagnoses
-      </p>
+      <h1 className="text-xl font-bold mb-1">{t("history.title")}</h1>
+      <p className="text-sm text-muted-foreground mb-6">{t("history.subtitle")}</p>
 
       {loading ? (
         <div className="flex items-center justify-center py-12">
@@ -48,7 +48,7 @@ const HistoryPage = () => {
         </div>
       ) : records.length === 0 ? (
         <div className="text-center py-12">
-          <p className="text-muted-foreground text-sm">No scans yet. Try scanning a leaf!</p>
+          <p className="text-muted-foreground text-sm">{t("history.noScans")}</p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -63,7 +63,7 @@ const HistoryPage = () => {
                 navigate("/results", {
                   state: {
                     disease: {
-                      name: record.disease_name || "Healthy",
+                      name: record.disease_name || t("results.healthy"),
                       crop: record.crop || "Unknown",
                       confidence: record.confidence || "Moderate",
                       severity: record.severity || "None",
@@ -91,7 +91,7 @@ const HistoryPage = () => {
 
               <div className="flex-1 min-w-0">
                 <p className="font-semibold text-sm truncate">
-                  {record.is_healthy ? "Healthy" : record.disease_name}
+                  {record.is_healthy ? t("results.healthy") : record.disease_name}
                 </p>
                 <p className="text-xs text-muted-foreground">
                   {record.crop || "Unknown"} ·{" "}

@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { MapContainer, TileLayer, CircleMarker, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface MapScan {
   id: string;
@@ -19,6 +20,7 @@ interface MapScan {
 
 const DiseaseMapPage = () => {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [scans, setScans] = useState<MapScan[]>([]);
   const [loading, setLoading] = useState(true);
   const [center, setCenter] = useState<[number, number]>([0, 20]);
@@ -38,7 +40,6 @@ const DiseaseMapPage = () => {
       const typedData = (data as unknown as MapScan[]) || [];
       setScans(typedData);
 
-      // Center map on user location or first scan
       try {
         const pos = await new Promise<GeolocationPosition>((resolve, reject) =>
           navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 5000 })
@@ -62,37 +63,30 @@ const DiseaseMapPage = () => {
 
   return (
     <div className="px-4 pt-4 pb-4">
-      <button
-        onClick={() => navigate("/")}
-        className="flex items-center gap-1 text-sm text-muted-foreground mb-4"
-      >
-        <ChevronLeft className="w-4 h-4" /> Home
+      <button onClick={() => navigate("/")} className="flex items-center gap-1 text-sm text-muted-foreground mb-4">
+        <ChevronLeft className="w-4 h-4" /> {t("map.home")}
       </button>
 
-      <h1 className="text-xl font-bold mb-1">Community Disease Map</h1>
-      <p className="text-sm text-muted-foreground mb-4">
-        Disease reports from farmers in the last 14 days
-      </p>
+      <h1 className="text-xl font-bold mb-1">{t("map.title")}</h1>
+      <p className="text-sm text-muted-foreground mb-4">{t("map.subtitle")}</p>
 
-      {/* Summary Stats */}
       <div className="grid grid-cols-2 gap-3 mb-4">
         <div className="diagnostic-card flex items-center gap-2">
           <AlertTriangle className="w-4 h-4 text-destructive" />
           <div>
             <p className="text-lg font-bold">{diseaseCount}</p>
-            <p className="text-xs text-muted-foreground">Diseases Reported</p>
+            <p className="text-xs text-muted-foreground">{t("map.diseasesReported")}</p>
           </div>
         </div>
         <div className="diagnostic-card flex items-center gap-2">
           <CheckCircle2 className="w-4 h-4 text-primary" />
           <div>
             <p className="text-lg font-bold">{healthyCount}</p>
-            <p className="text-xs text-muted-foreground">Healthy Scans</p>
+            <p className="text-xs text-muted-foreground">{t("map.healthyScans")}</p>
           </div>
         </div>
       </div>
 
-      {/* Map */}
       {loading ? (
         <div className="flex items-center justify-center py-20">
           <Loader2 className="w-6 h-6 text-primary animate-spin" />
@@ -121,7 +115,7 @@ const DiseaseMapPage = () => {
                 }}
               >
                 <Popup>
-                  <strong>{scan.is_healthy ? "Healthy" : scan.disease_name}</strong>
+                  <strong>{scan.is_healthy ? t("results.healthy") : scan.disease_name}</strong>
                   <br />
                   {scan.crop} · {scan.severity || "N/A"}
                   <br />
@@ -133,10 +127,9 @@ const DiseaseMapPage = () => {
         </motion.div>
       )}
 
-      {/* Recent Reports List */}
       {scans.filter((s) => !s.is_healthy).length > 0 && (
         <div className="mt-6">
-          <h3 className="font-bold text-sm mb-3">Recent Disease Reports</h3>
+          <h3 className="font-bold text-sm mb-3">{t("map.recentReports")}</h3>
           <div className="space-y-2">
             {scans
               .filter((s) => !s.is_healthy)

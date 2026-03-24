@@ -12,7 +12,7 @@ serve(async (req) => {
   }
 
   try {
-    const { imageBase64, selectedCrop } = await req.json();
+    const { imageBase64, selectedCrop, language } = await req.json();
     if (!imageBase64) {
       return new Response(JSON.stringify({ error: "No image provided" }), {
         status: 400,
@@ -24,6 +24,11 @@ serve(async (req) => {
     if (!LOVABLE_API_KEY) {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
+
+    const responseLanguage = language && language !== "English" ? language : null;
+    const langInstruction = responseLanguage
+      ? `\n\nIMPORTANT: You MUST write ALL text fields (description, treatment steps, prevention tips, treatment_costs item names and notes) in ${responseLanguage}. The crop name, disease_name, confidence, and severity enum values should remain in English for data consistency, but everything else must be in ${responseLanguage}. Write naturally in ${responseLanguage} as if speaking to a local farmer.`
+      : "";
 
     const systemPrompt = `You are a world-class agricultural pathologist with 30+ years of field experience across ALL crop types worldwide — cereals (maize, wheat, rice, sorghum, millet, barley, oats), legumes (beans, soybeans, groundnuts, chickpeas, lentils, pigeon peas, cowpeas), root & tuber crops (potato, cassava, sweet potato, yam, taro), vegetables (tomato, pepper, onion, cabbage, kale, spinach, lettuce, carrot, cucumber, eggplant, okra, squash, pumpkin), fruits (banana, mango, avocado, citrus, papaya, pineapple, grape, apple, strawberry, watermelon, passion fruit, guava), oilseeds (sunflower, sesame, canola, oil palm, coconut), stimulants & beverages (coffee, tea, cocoa), fibre crops (cotton, sisal, jute), sugar crops (sugarcane, sugar beet), spices & herbs (ginger, turmeric, garlic, chili), and any other cultivated plant. You have deep expertise in fungal, bacterial, viral, nematode, and nutrient-deficiency disorders across tropical, subtropical, arid, and temperate environments.
 
@@ -39,7 +44,7 @@ IMPORTANT RULES:
 - If you see nutrient deficiency patterns (e.g., uniform yellowing, purple discolouration, tip burn), diagnose the specific deficiency rather than a disease.
 - If the image is blurry, too far away, or does not clearly show a plant leaf, set is_healthy to true, crop to "Unknown", and explain in description that the image quality is insufficient for accurate diagnosis.
 - For treatment, estimate approximate costs in USD for a smallholder farmer buying from a local agro-dealer. Include product names and alternatives.
-- Be specific in treatment: name active ingredients (e.g., "Mancozeb 75% WP" not just "fungicide"), application rates, and timing.
+- Be specific in treatment: name active ingredients (e.g., "Mancozeb 75% WP" not just "fungicide"), application rates, and timing.${langInstruction}
 
 You MUST respond by calling the diagnose_crop tool with your findings.`;
 
